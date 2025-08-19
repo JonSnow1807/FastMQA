@@ -1,17 +1,11 @@
 # python/fastmqa.py
 import torch
 import torch.nn as nn
-from torch.utils.cpp_extension import load
-import os
 import warnings
 
-try:
-    # Try to import the compiled CUDA extension
-    import fastmqa_cuda
-    CUDA_AVAILABLE = True
-except ImportError:
-    CUDA_AVAILABLE = False
-    warnings.warn("FastMQA CUDA extension not built. Please run: python setup.py install")
+# Simplified version without cpp_extension import
+CUDA_AVAILABLE = False
+warnings.warn("FastMQA CUDA extension not built. Using PyTorch fallback.")
 
 class FastMQAttention(nn.Module):
     """
@@ -23,16 +17,12 @@ class FastMQAttention(nn.Module):
         use_cuda: Whether to use CUDA kernel (falls back to PyTorch if False)
     """
     
-    def __init__(self, num_heads=32, head_dim=128, use_cuda=True):
+    def __init__(self, num_heads=32, head_dim=128, use_cuda=False):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = head_dim
-        self.use_cuda = use_cuda and CUDA_AVAILABLE
+        self.use_cuda = False  # Always use PyTorch for now
         self.scale = 1.0 / (head_dim ** 0.5)
-        
-        if self.use_cuda and head_dim not in [64, 80, 128]:
-            warnings.warn(f"Head dim {head_dim} not optimized. Using PyTorch fallback.")
-            self.use_cuda = False
     
     def forward(self, Q, K, V, mask=None):
         """
@@ -45,33 +35,7 @@ class FastMQAttention(nn.Module):
         Returns:
             output: [batch, num_heads, seq_len, head_dim]
         """
-        batch_size, num_heads, seq_len, head_dim = Q.shape
-        
-        # Validate inputs
-        assert K.shape[1] == 1, "K should have single head for MQA"
-        assert V.shape[1] == 1, "V should have single head for MQA"
-        assert head_dim == self.head_dim
-        assert num_heads == self.num_heads
-        
-        if self.use_cuda and mask is None and seq_len <= 2048:
-            # Use custom CUDA kernel
-            output = torch.empty_like(Q)
-            
-            # Ensure contiguous memory layout
-            Q_contig = Q.contiguous()
-            K_contig = K.contiguous()
-            V_contig = V.contiguous()
-            
-            # Call CUDA kernel
-            fastmqa_cuda.forward(
-                Q_contig, K_contig, V_contig, output,
-                batch_size, num_heads, seq_len, head_dim
-            )
-            
-            return output
-        else:
-            # Fallback to PyTorch implementation
-            return self._pytorch_mqa(Q, K, V, mask)
+        return self._pytorch_mqa(Q, K, V, mask)
     
     def _pytorch_mqa(self, Q, K, V, mask=None):
         """PyTorch fallback implementation"""
@@ -94,54 +58,13 @@ class FastMQAttention(nn.Module):
         output = torch.matmul(attn_weights, V_expanded)
         
         return output
-    
-    def profile(self, batch_size=4, seq_len=512):
-        """Profile the kernel performance"""
-        if not self.use_cuda:
-            print("CUDA kernel not available. Cannot profile.")
-            return
-        
-        # Create dummy inputs
-        Q = torch.randn(batch_size, self.num_heads, seq_len, self.head_dim).cuda()
-        K = torch.randn(batch_size, 1, seq_len, self.head_dim).cuda()
-        V = torch.randn(batch_size, 1, seq_len, self.head_dim).cuda()
-        
-        # Warmup
-        for _ in range(10):
-            _ = self.forward(Q, K, V)
-        
-        # Time the kernel
-        torch.cuda.synchronize()
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
-        
-        start.record()
-        for _ in range(100):
-            _ = self.forward(Q, K, V)
-        end.record()
-        
-        torch.cuda.synchronize()
-        elapsed_ms = start.elapsed_time(end) / 100
-        
-        # Calculate metrics
-        total_flops = 2 * batch_size * self.num_heads * seq_len * seq_len * self.head_dim
-        throughput = (total_flops / elapsed_ms) / 1e9  # GFLOPS
-        
-        print(f"FastMQA Kernel Performance:")
-        print(f"  Batch Size: {batch_size}, Seq Len: {seq_len}")
-        print(f"  Time: {elapsed_ms:.3f} ms")
-        print(f"  Throughput: {throughput:.2f} GFLOPS")
-        
-        return elapsed_ms, throughput
 
-
-# Convenience function for testing
 def test_mqa():
     """Simple test to verify the implementation works"""
     print("Testing FastMQA implementation...")
     
     # Create model
-    mqa = FastMQAttention(num_heads=8, head_dim=64, use_cuda=False)  # PyTorch only for now
+    mqa = FastMQAttention(num_heads=8, head_dim=64)
     
     # Create inputs
     batch_size, seq_len = 2, 128
