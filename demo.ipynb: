@@ -1,0 +1,99 @@
+# Save this as demo.ipynb (or create manually in Jupyter)
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# FastMQA Demo Notebook\n",
+    "\n",
+    "This notebook demonstrates the FastMQA CUDA kernel for efficient Multi-Query Attention."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import torch\n",
+    "import sys\n",
+    "sys.path.append('python')\n",
+    "from fastmqa import FastMQAttention\n",
+    "\n",
+    "print(f\"PyTorch version: {torch.__version__}\")\n",
+    "print(f\"CUDA available: {torch.cuda.is_available()}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Basic Usage"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Initialize FastMQA\n",
+    "mqa = FastMQAttention(num_heads=8, head_dim=64)\n",
+    "\n",
+    "# Create sample inputs\n",
+    "batch_size = 2\n",
+    "seq_len = 128\n",
+    "num_heads = 8\n",
+    "head_dim = 64\n",
+    "\n",
+    "Q = torch.randn(batch_size, num_heads, seq_len, head_dim)\n",
+    "K = torch.randn(batch_size, 1, seq_len, head_dim)  # Single KV head\n",
+    "V = torch.randn(batch_size, 1, seq_len, head_dim)\n",
+    "\n",
+    "# Forward pass\n",
+    "output = mqa(Q, K, V)\n",
+    "print(f\"Output shape: {output.shape}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Performance Comparison"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import time\n",
+    "\n",
+    "# Benchmark different sequence lengths\n",
+    "for seq_len in [128, 256, 512]:\n",
+    "    Q = torch.randn(4, 8, seq_len, 64)\n",
+    "    K = torch.randn(4, 1, seq_len, 64)\n",
+    "    V = torch.randn(4, 1, seq_len, 64)\n",
+    "    \n",
+    "    # Time FastMQA\n",
+    "    start = time.perf_counter()\n",
+    "    for _ in range(100):\n",
+    "        _ = mqa(Q, K, V)\n",
+    "    elapsed = (time.perf_counter() - start) / 100 * 1000\n",
+    "    \n",
+    "    print(f\"Seq Length {seq_len}: {elapsed:.2f} ms\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
