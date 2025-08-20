@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-08-19T17:57:06.010057",
+  "timestamp": "2025-08-19T22:55:56.548703",
   "device": "cpu",
   "benchmarks": [
     {
@@ -10,27 +10,27 @@
       "implementations": [
         {
           "name": "PyTorch Manual",
-          "mean_ms": 0.24247915207524784,
-          "min_ms": 0.18899999849963933,
-          "max_ms": 0.31370899523608387,
+          "mean_ms": 0.28817790000914556,
+          "min_ms": 0.22575299999516574,
+          "max_ms": 0.46067099998481353,
           "memory_mb": 0.3125,
-          "throughput_tokens_per_sec": 527880.4338621167
+          "throughput_tokens_per_sec": 444170.0768724382
         },
         {
           "name": "FastMQA (PyTorch)",
-          "mean_ms": 0.21312714961823076,
-          "min_ms": 0.18345899297855794,
-          "max_ms": 0.24449999909847975,
+          "mean_ms": 0.2532664500080273,
+          "min_ms": 0.21745399999417714,
+          "max_ms": 0.336400000037429,
           "memory_mb": 0.3125,
-          "throughput_tokens_per_sec": 600580.4526982281
+          "throughput_tokens_per_sec": 505396.58922823385
         },
         {
           "name": "FastMQA CUDA (simulated)",
-          "mean_ms": 0.13471064004180436,
-          "min_ms": 0.12797510803971412,
-          "max_ms": 0.1414461720438946,
+          "mean_ms": 0.1600988333384142,
+          "min_ms": 0.15209389167149348,
+          "max_ms": 0.16810377500533494,
           "memory_mb": 0.09375,
-          "throughput_tokens_per_sec": 950184.7809518101
+          "throughput_tokens_per_sec": 799506.1383703888
         }
       ]
     },
@@ -42,27 +42,27 @@
       "implementations": [
         {
           "name": "PyTorch Manual",
-          "mean_ms": 1.9216520508052781,
-          "min_ms": 1.6665409930283204,
-          "max_ms": 2.897625003242865,
+          "mean_ms": 1.595955599995591,
+          "min_ms": 1.2397410000062337,
+          "max_ms": 3.7568209999676583,
           "memory_mb": 1.25,
-          "throughput_tokens_per_sec": 266437.4124261693
+          "throughput_tokens_per_sec": 320810.9298287587
         },
         {
           "name": "FastMQA (PyTorch)",
-          "mean_ms": 1.7163500015158206,
-          "min_ms": 1.4983750006649643,
-          "max_ms": 1.9021659973077476,
+          "mean_ms": 1.7490098999985548,
+          "min_ms": 1.23308399997768,
+          "max_ms": 3.63282800003617,
           "memory_mb": 1.25,
-          "throughput_tokens_per_sec": 298307.45450975583
+          "throughput_tokens_per_sec": 292737.0508311148
         },
         {
           "name": "FastMQA CUDA (simulated)",
-          "mean_ms": 1.0675844726695989,
-          "min_ms": 1.0142052490361189,
-          "max_ms": 1.120963696303079,
+          "mean_ms": 0.8866419999975506,
+          "min_ms": 0.842309899997673,
+          "max_ms": 0.9309740999974281,
           "memory_mb": 0.375,
-          "throughput_tokens_per_sec": 479587.34236710484
+          "throughput_tokens_per_sec": 577459.6736917656
         }
       ]
     },
@@ -74,27 +74,27 @@
       "implementations": [
         {
           "name": "PyTorch Manual",
-          "mean_ms": 12.45624584989855,
-          "min_ms": 11.85237499885261,
-          "max_ms": 14.973625002312474,
+          "mean_ms": 32.69420444999298,
+          "min_ms": 31.087936999995236,
+          "max_ms": 40.84372700003769,
           "memory_mb": 5.0,
-          "throughput_tokens_per_sec": 164415.50886832247
+          "throughput_tokens_per_sec": 62641.071543199454
         },
         {
           "name": "FastMQA (PyTorch)",
-          "mean_ms": 13.246629252535058,
-          "min_ms": 11.719417001586407,
-          "max_ms": 22.708625008817762,
+          "mean_ms": 33.20714694999651,
+          "min_ms": 30.995223999980226,
+          "max_ms": 41.843758000027265,
           "memory_mb": 5.0,
-          "throughput_tokens_per_sec": 154605.36872865725
+          "throughput_tokens_per_sec": 61673.470565956435
         },
         {
           "name": "FastMQA CUDA (simulated)",
-          "mean_ms": 6.920136583276973,
-          "min_ms": 6.574129754113124,
-          "max_ms": 7.2661434124408215,
+          "mean_ms": 18.163446916662767,
+          "min_ms": 17.255274570829627,
+          "max_ms": 19.071619262495908,
           "memory_mb": 1.5,
-          "throughput_tokens_per_sec": 295947.9159629804
+          "throughput_tokens_per_sec": 112753.928777759
         }
       ]
     }

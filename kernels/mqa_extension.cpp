@@ -2,8 +2,8 @@
 #include <torch/extension.h>
 #include <vector>
 
-// Forward declaration of CUDA kernel launcher
-void launch_mqa_kernel(
+// Forward declaration of CUDA kernel launcher - extern "C" to match
+extern "C" void launch_mqa_kernel(
     float* Q, float* K, float* V, float* output,
     int batch_size, int num_heads, int seq_len, int head_dim
 );
@@ -21,6 +21,7 @@ torch::Tensor mqa_forward(
     TORCH_CHECK(Q.is_contiguous(), "Q must be contiguous");
     TORCH_CHECK(K.is_contiguous(), "K must be contiguous");
     TORCH_CHECK(V.is_contiguous(), "V must be contiguous");
+    TORCH_CHECK(Q.dtype() == torch::kFloat32, "Only float32 supported");
     
     // Get dimensions
     const int batch_size = Q.size(0);

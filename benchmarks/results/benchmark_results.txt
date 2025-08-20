@@ -1,0 +1,28 @@
+FastMQA Benchmark Suite
+============================================================
+Running simplified benchmarks (CPU only)
+Running MQA Benchmarks...
+============================================================
+
+Config: Batch=1, Seq=128, HeadDim=64
+----------------------------------------
+  PyTorch Manual: 0.288 ms
+  FastMQA (PyTorch): 0.253 ms
+  FastMQA CUDA (simulated): 0.160 ms
+  Simulated Speedup: 1.8x
+
+Config: Batch=2, Seq=256, HeadDim=64
+----------------------------------------
+  PyTorch Manual: 1.596 ms
+  FastMQA (PyTorch): 1.749 ms
+  FastMQA CUDA (simulated): 0.887 ms
+  Simulated Speedup: 1.8x
+
+Config: Batch=4, Seq=512, HeadDim=64
+----------------------------------------
+  PyTorch Manual: 32.694 ms
+  FastMQA (PyTorch): 33.207 ms
+  FastMQA CUDA (simulated): 18.163 ms
+  Simulated Speedup: 1.8x
+
+✓ Benchmark complete! Results saved to benchmarks/results.json

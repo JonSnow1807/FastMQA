@@ -4,7 +4,6 @@
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
-#include "utils.cuh"
 
 #define TILE_SIZE 16
 #define WARP_SIZE 32
@@ -96,75 +95,64 @@ __global__ void mqa_attention_kernel_tiled(
     const int head_dim,
     const float scale
 ) {
-    // Shared memory for tiles
-    extern __shared__ float shared_mem[];
-    
     const int tid = threadIdx.x;
     const int batch_idx = blockIdx.z;
     const int head_idx = blockIdx.y;
-    const int q_tile_idx = blockIdx.x;
+    const int q_idx = blockIdx.x * blockDim.x + tid;
     
-    const int q_start = q_tile_idx * TILE_SIZE;
-    const int q_end = min(q_start + TILE_SIZE, seq_len);
+    if (q_idx >= seq_len) return;
     
-    if (q_start >= seq_len) return;
+    // Pointers to Q, K, V for this batch and head
+    const float* q_ptr = Q + ((batch_idx * num_heads + head_idx) * seq_len + q_idx) * head_dim;
+    const float* k_ptr = K + batch_idx * seq_len * head_dim;
+    const float* v_ptr = V + batch_idx * seq_len * head_dim;
+    float* out_ptr = output + ((batch_idx * num_heads + head_idx) * seq_len + q_idx) * head_dim;
     
-    // Process each query in the tile
-    for (int q_idx = q_start + tid; q_idx < q_end; q_idx += blockDim.x) {
-        // Pointers to Q, K, V for this batch and head
-        const float* q_ptr = Q + ((batch_idx * num_heads + head_idx) * seq_len + q_idx) * head_dim;
-        const float* k_ptr = K + batch_idx * seq_len * head_dim;
-        const float* v_ptr = V + batch_idx * seq_len * head_dim;
-        float* out_ptr = output + ((batch_idx * num_heads + head_idx) * seq_len + q_idx) * head_dim;
+    // Compute attention scores
+    float max_score = -FLT_MAX;
+    
+    // Allocate space for scores (adjust size based on your needs)
+    float scores[2048];  // Max seq_len support
+    
+    // Compute Q @ K^T
+    for (int k_idx = 0; k_idx < seq_len; k_idx++) {
+        float score = 0.0f;
+        const float* k_vec = k_ptr + k_idx * head_dim;
         
-        // Compute attention scores
-        float max_score = -FLT_MAX;
-        
-        // Store scores in registers when possible
-        float scores[256];  // Adjust based on expected seq_len
-        
-        // Compute Q @ K^T
-        for (int k_idx = 0; k_idx < seq_len; k_idx++) {
-            float score = 0.0f;
-            const float* k_vec = k_ptr + k_idx * head_dim;
-            
-            // Vectorized dot product
-            for (int d = 0; d < head_dim; d++) {
-                score += q_ptr[d] * k_vec[d];
-            }
-            
-            score *= scale;
-            scores[k_idx] = score;
-            max_score = fmaxf(max_score, score);
-        }
-        
-        // Softmax
-        float sum_exp = 0.0f;
-        for (int i = 0; i < seq_len; i++) {
-            scores[i] = expf(scores[i] - max_score);
-            sum_exp += scores[i];
-        }
-        
-        float inv_sum = 1.0f / sum_exp;
-        for (int i = 0; i < seq_len; i++) {
-            scores[i] *= inv_sum;
-        }
-        
-        // Compute output: attention @ V
+        // Vectorized dot product
         for (int d = 0; d < head_dim; d++) {
-            float out_val = 0.0f;
-            for (int v_idx = 0; v_idx < seq_len; v_idx++) {
-                out_val += scores[v_idx] * v_ptr[v_idx * head_dim + d];
-            }
-            out_ptr[d] = out_val;
+            score += q_ptr[d] * k_vec[d];
         }
+        
+        score *= scale;
+        scores[k_idx] = score;
+        max_score = fmaxf(max_score, score);
+    }
+    
+    // Softmax
+    float sum_exp = 0.0f;
+    for (int i = 0; i < seq_len; i++) {
+        scores[i] = expf(scores[i] - max_score);
+        sum_exp += scores[i];
+    }
+    
+    float inv_sum = 1.0f / sum_exp;
+    for (int i = 0; i < seq_len; i++) {
+        scores[i] *= inv_sum;
+    }
+    
+    // Compute output: attention @ V
+    for (int d = 0; d < head_dim; d++) {
+        float out_val = 0.0f;
+        for (int v_idx = 0; v_idx < seq_len; v_idx++) {
+            out_val += scores[v_idx] * v_ptr[v_idx * head_dim + d];
+        }
+        out_ptr[d] = out_val;
     }
 }
 
-// C interface for PyTorch extension
-extern "C" {
-
-void launch_mqa_kernel(
+// C interface for PyTorch extension - FIXED extern "C" placement
+extern "C" void launch_mqa_kernel(
     float* Q, float* K, float* V, float* output,
     int batch_size, int num_heads, int seq_len, int head_dim
 ) {
@@ -190,19 +178,17 @@ void launch_mqa_kernel(
             // Generic version
             dim3 block_tiled(128);
             dim3 grid_tiled((seq_len + TILE_SIZE - 1) / TILE_SIZE, num_heads, batch_size);
-            size_t shared_size = TILE_SIZE * head_dim * sizeof(float) * 3;
             
-            mqa_attention_kernel_tiled<<<grid_tiled, block_tiled, shared_size>>>(
+            mqa_attention_kernel_tiled<<<grid_tiled, block_tiled>>>(
                 Q, K, V, output, batch_size, num_heads, seq_len, head_dim, scale
             );
         }
     } else {
         // Use tiled kernel for longer sequences
         dim3 block(128);
-        dim3 grid((seq_len + TILE_SIZE - 1) / TILE_SIZE, num_heads, batch_size);
-        size_t shared_mem_size = TILE_SIZE * head_dim * sizeof(float) * 3;
+        dim3 grid((seq_len + 128 - 1) / 128, num_heads, batch_size);
         
-        mqa_attention_kernel_tiled<<<grid, block, shared_mem_size>>>(
+        mqa_attention_kernel_tiled<<<grid, block>>>(
             Q, K, V, output, batch_size, num_heads, seq_len, head_dim, scale
         );
     }
@@ -214,5 +200,3 @@ void launch_mqa_kernel(
     
     cudaDeviceSynchronize();
 }
-
-} // extern "C"

@@ -1,0 +1,57 @@
+[
+  {
+    "batch_size": 1,
+    "seq_len": 128,
+    "head_dim": 64,
+    "num_heads": 32,
+    "cuda_ms": 2.9553964233398435,
+    "pytorch_ms": 0.08997759819030762,
+    "speedup": 0.030445187481355027,
+    "throughput": 43310.602594338045,
+    "memory_reduction": 96.875
+  },
+  {
+    "batch_size": 2,
+    "seq_len": 256,
+    "head_dim": 64,
+    "num_heads": 32,
+    "cuda_ms": 14.584053955078126,
+    "pytorch_ms": 0.6529401397705078,
+    "speedup": 0.044770825847305365,
+    "throughput": 35106.83665715067,
+    "memory_reduction": 96.875
+  },
+  {
+    "batch_size": 4,
+    "seq_len": 512,
+    "head_dim": 128,
+    "num_heads": 32,
+    "cuda_ms": 238.47478515625,
+    "pytorch_ms": 7.836180419921875,
+    "speedup": 0.032859576389963265,
+    "throughput": 8587.910032744716,
+    "memory_reduction": 96.875
+  },
+  {
+    "batch_size": 8,
+    "seq_len": 1024,
+    "head_dim": 128,
+    "num_heads": 32,
+    "cuda_ms": 2147.9775,
+    "pytorch_ms": 66.9695166015625,
+    "speedup": 0.031177941389778294,
+    "throughput": 3813.8202099416776,
+    "memory_reduction": 96.875
+  },
+  {
+    "batch_size": 1,
+    "seq_len": 2048,
+    "head_dim": 128,
+    "num_heads": 32,
+    "cuda_ms": 1057.666796875,
+    "pytorch_ms": 31.82265625,
+    "speedup": 0.030087600692414427,
+    "throughput": 1936.337612233886,
+    "memory_reduction": 96.875
+  }
+]
