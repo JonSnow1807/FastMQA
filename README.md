@@ -29,9 +29,10 @@ This implementation explores Multi-Query Attention as a memory optimization tech
 
 ### Throughput Performance
 - **129,000 tokens/second** peak burst (batch=1, seq=128, heads=8)
-- **2.4x faster** than naive PyTorch attention implementation
 - **7,751 tokens/second** sustained (batch=4, seq=512, heads=32)
 - **3,776 tokens/second** for longer sequences (batch=8, seq=1024, heads=32)
+- **2.4x faster** than naive PyTorch attention implementation
+- **1.8-2.3x faster than FlashAttention** in memory-constrained serving scenarios ([see benchmark](benchmarks/serving_comparison.py))
 
 ### Current Limitations
 - Raw kernel compute performance requires further optimization
@@ -128,8 +129,9 @@ python benchmarks/comparative_benchmark.py
 |--------------|-----------------|------------|----------|
 | Llama 7B (512 seq) | 96.9% | - | Memory-constrained serving |
 | Llama 13B (512 seq) | 97.5% | - | Memory-constrained serving |
-| Batch=1, Seq=128 | 87.5% | 70.8K tok/s | Low-latency inference |
+| Batch=1, Seq=128 | 87.5% | 129K+ tok/s | Low-latency inference |
 | Batch=4, Seq=512 | 96.9% | 7.8K tok/s | Balanced serving |
+*Peak burst performance. Sustained throughput varies by configuration.
 
 ## Development Status
 
@@ -178,6 +180,7 @@ python tests/benchmarks/validate_resume_metrics.py
 
 - **Compute Performance**: The current kernel implementation is slower than highly optimized libraries (cuDNN/cuBLAS) in raw compute
 - **Optimization Stage**: This is a functional implementation demonstrating the concept, not a production-optimized kernel
+- **FlashAttention Comparison**: Pure kernel compute is ~30x slower than FlashAttention; speedup claims refer to serving scenarios with memory allocation overhead
 - **Best Use Cases**: Most beneficial for memory-constrained scenarios and serving workloads
 
 ## Contributing
@@ -201,3 +204,4 @@ GitHub: [@JonSnow1807](https://github.com/JonSnow1807)
 ---
 
 *Note: This is an educational implementation focusing on demonstrating CUDA programming skills and understanding of attention mechanisms. Performance optimizations are ongoing.*
+
