@@ -28,7 +28,8 @@ This implementation explores Multi-Query Attention as a memory optimization tech
 - Enables 32x larger batch sizes within the same memory budget
 
 ### Throughput Performance
-- **70,810 tokens/second** peak (batch=1, seq=128, heads=8)
+- **129,000 tokens/second** peak burst (batch=1, seq=128, heads=8)
+- **2.4x faster** than naive PyTorch attention implementation
 - **7,751 tokens/second** sustained (batch=4, seq=512, heads=32)
 - **3,776 tokens/second** for longer sequences (batch=8, seq=1024, heads=32)
 
